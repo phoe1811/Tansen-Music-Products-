@@ -23,3 +23,24 @@ If you've heard about the epic Indian singer Tansen then you'll be knowing that 
 
 
 Made plan for placing of components and it really tookk time yaar like i was thinking i will be  a simple wor i have o jus think how tto place any component but when i focused m mind and imagined it then i thought that it needs precision as we have to mount both speakers and components both so i focused and litteral i have done a lo of brainstorming in my mind and on paperr also but showed what i was able to show all these pages and my small brain ...
+
+
+
+
+https://lapse.hackclub.com/timelapse/D6lBO3XLyaDZ   
+
+
+
+toookk a large time to understand things on onshape yrrr but what can i do atleast now
+i have  a large amount of ways that how we can't make the earcup of headphone..
+
+
+<img width="1279" height="670" alt="image" src="https://github.com/user-attachments/assets/4c95b904-5c80-43c4-aaf6-a7cf8502b0ee" />
+
+
+
+
+<img width="1279" height="718" alt="image" src="https://github.com/user-attachments/assets/68e64c28-5df7-42ad-821e-4a6274e7569c" />
+
+
+<img width="1279" height="670" alt="image" src="https://github.com/user-attachments/assets/55190301-5d7c-4c5c-8212-70132d08202d" />
