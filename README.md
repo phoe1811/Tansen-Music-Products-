@@ -44,3 +44,19 @@ i have  a large amount of ways that how we can't make the earcup of headphone..
 
 
 <img width="1279" height="670" alt="image" src="https://github.com/user-attachments/assets/55190301-5d7c-4c5c-8212-70132d08202d" />
+
+
+
+| Category | Product Name / Specification | Quantity | Price |
+| :--- | :--- | :---: | :--- |
+| **Electronics** | [ESP32 Dev Board](https://robocraze.com/products/esp32-development-board-with-cp2102-wifi-bluetooth-dual-core-30-pin?variant=53806381531360&country=IN&currency=INR) | 1 | Rs 415 |
+| **Sensor** | [DHT11 Digital Temperature Humidity Sensor Module](https://robocraze.com/products/dht11-humidity-and-temperature-sensor?variant=40193297350809&country=IN&currency=INR) | 1 | Rs 65 |
+| **Audio** | [DFR0299 Mini MP3 Player module](https://probots.co.in/dfplayer-mini-mp3-module-serial-audio-playback.html) | 1 | Rs 119 |
+| **Storage** | [Digitek 4gb sd card](https://www.digitek.net.in/products/digitek-tf-memory-card-4gb-c10?variant=48250087932137&country=IN&currency=INR) | 1 | Rs 309 |
+| **Audio** | [3W 4 Ohm Speaker](https://www.amazon.in/Speaker-Driver-Projects-Electronic-Devices/dp/B0GTZ5DD6P/) | 1 | Rs 199 |
+| **Wiring** | [jumper wires](https://robocraze.com/products/jumper-wire-set-m2m-m2f-f2f-40-pcs-each?variant=40192573636761&country=IN&currency=INR) | 1 | Rs 145 |
+| **Assembly** | [3x7cm double sided prototype PCB 2pcs pack](https://robocraze.com/products/veroboard6x4?variant=40192559841433&country=IN&currency=INR) | 1 | Rs 99 |
+| **Power** | [Micro USB A to Micro B data and power cable 100cm](https://robocraze.com/products/usb-to-micro-usb-cable?variant=40192442007705&country=IN&currency=INR) | 1 | Rs 49 |
+| **Enclosure** | [M3 fasteners and mounting hardware allowance](https://roboticsdna.in/product/m3-x-6mm-bolt-ss-304-csk-countersunk-philips-head-25-pcs-2/) | 1 | Rs 49 |
+| **Power** | [5V 2A USB wall adapter (regulated)](https://roboticsdna.in/product/5v-2a-type-c-dc-adapter/) | 1 | Rs 199 |
+| **Total** | — | — | **Rs 1648** |
