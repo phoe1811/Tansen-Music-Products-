@@ -1,0 +1,523 @@
+
+#include <Arduino.h>
+#include <WiFi.h>
+#include <WebServer.h>
+
+#define ENABLE_WIFI_AP false
+
+const char* AP_SSID = "tkgod11";
+const char* AP_PASSWORD = "@143chunks";
+
+WebServer server(80);
+
+
+float temperature = 26.0;
+float humidity = 60.0;
+
+bool automaticMode = true;
+bool playing = false;
+
+int volumeLevel = 20;
+int currentTrack = 3;
+
+String mood = "calm";
+
+unsigned long lastPrint = 0;
+unsigned long lastMoodChange = 0;
+
+const unsigned long MOOD_COOLDOWN = 15000;
+
+
+
+
+int trackForMood(const String& value) {
+  if (value == "rainy") return 1;
+  if (value == "energetic") return 2;
+  return 3;
+}
+
+String determineMood() {
+  if (humidity >= 75.0) return "rainy";
+  if (temperature >= 30.0) return "energetic";
+  return "calm";
+}
+
+void playTrack(int track) {
+  currentTrack = constrain(track, 1, 3);
+  playing = true;
+
+  Serial.println();
+  Serial.println("===== DFPLAYER SIMULATION =====");
+  Serial.print("Playing MP3 track: ");
+  Serial.println(currentTrack);
+  Serial.println("===============================");
+}
+
+void applyMood(bool force = false) {
+  if (!automaticMode) return;
+
+  String desired = determineMood();
+
+  if (desired == mood) return;
+
+  if (!force &&
+      millis() - lastMoodChange < MOOD_COOLDOWN) {
+    return;
+  }
+
+  mood = desired;
+  lastMoodChange = millis();
+
+  Serial.print("Weather mood changed to: ");
+  Serial.println(mood);
+
+  playTrack(trackForMood(mood));
+}
+
+
+
+String jsonState() {
+  String json = "{";
+
+  json += "\"temperature\":";
+  json += String(temperature, 1);
+  json += ",";
+
+  json += "\"humidity\":";
+  json += String(humidity, 1);
+  json += ",";
+
+  json += "\"mood\":\"" + mood + "\",";
+
+  json += "\"automatic\":";
+  json += automaticMode ? "true," : "false,";
+
+  json += "\"playing\":";
+  json += playing ? "true," : "false,";
+
+  json += "\"track\":";
+  json += String(currentTrack);
+  json += ",";
+
+  json += "\"volume\":";
+  json += String(volumeLevel);
+  json += ",";
+
+  json += "\"simulation\":true";
+  json += "}";
+
+  return json;
+}
+
+
+
+const char PAGE[] PROGMEM = R"HTML(
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+content="width=device-width, initial-scale=1">
+<title>tkgod11</title>
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: #0b1220;
+  color: #f1f5f9;
+  font-family: Arial, sans-serif;
+}
+
+main {
+  max-width: 540px;
+  margin: 25px auto;
+  padding: 20px;
+}
+
+h1 { color: #7dd3fc; }
+
+.panel {
+  background: #19263b;
+  border: 1px solid #304159;
+  border-radius: 18px;
+  padding: 20px;
+  margin: 16px 0;
+}
+
+.stats {
+  display: flex;
+  gap: 12px;
+}
+
+.stats .panel {
+  flex: 1;
+  min-width: 0;
+}
+
+button {
+  background: #38bdf8;
+  color: #08121e;
+  border: none;
+  border-radius: 10px;
+  padding: 12px;
+  margin: 4px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+input[type="range"] {
+  width: 100%;
+}
+
+.muted { color: #a6b6ca; }
+</style>
+</head>
+
+<body>
+<main>
+<h1>tkgod11</h1>
+<p class="muted">Your weather. Your music.</p>
+
+<div class="stats">
+  <div class="panel">
+    <p>Temperature</p>
+    <h2 id="temp">--</h2>
+  </div>
+
+  <div class="panel">
+    <p>Humidity</p>
+    <h2 id="humidity">--</h2>
+  </div>
+</div>
+
+<div class="panel">
+  <p class="muted">Current Mood</p>
+  <h2 id="mood">Loading...</h2>
+  <p id="track"></p>
+  <p id="mode"></p>
+  <p>Simulation Mode</p>
+</div>
+
+<div class="panel">
+  <button onclick="send('toggle')" id="play">
+    Play / Pause
+  </button>
+
+  <button onclick="send('previous')">
+    Previous
+  </button>
+
+  <button onclick="send('next')">
+    Next
+  </button>
+
+  <p>
+    <button onclick="send('auto')">
+      Auto Mode
+    </button>
+
+    <button onclick="send('manual')">
+      Manual Mode
+    </button>
+  </p>
+
+  <label for="volume">Volume</label>
+  <input id="volume"
+    type="range"
+    min="0"
+    max="30"
+    value="20"
+    onchange="send('volume',this.value)">
+</div>
+
+<p class="muted" id="status">
+Connecting...
+</p>
+</main>
+
+<script>
+async function refresh() {
+  try {
+    const response = await fetch('/api/state');
+    if (!response.ok) throw Error('Network error');
+
+    const s = await response.json();
+
+    document.getElementById('temp').textContent =
+      s.temperature + ' °C';
+
+    document.getElementById('humidity').textContent =
+      s.humidity + ' %';
+
+    document.getElementById('mood').textContent =
+      s.mood.toUpperCase();
+
+    document.getElementById('track').textContent =
+      'Track ' + s.track;
+
+    document.getElementById('mode').textContent =
+      s.automatic ? 'Automatic Mode' : 'Manual Mode';
+
+    document.getElementById('play').textContent =
+      s.playing ? 'Pause' : 'Play';
+
+    document.getElementById('volume').value =
+      s.volume;
+
+    document.getElementById('status').textContent =
+      'Connected';
+
+  } catch (error) {
+    document.getElementById('status').textContent =
+      'Connection unavailable';
+  }
+}
+
+async function send(action, value) {
+  try {
+    let url = '/api/control?action=' +
+              encodeURIComponent(action);
+
+    if (value !== undefined) {
+      url += '&value=' + encodeURIComponent(value);
+    }
+
+    const response = await fetch(url, {
+      method: 'POST'
+    });
+
+    if (!response.ok) throw Error('Command failed');
+
+    await refresh();
+
+  } catch (error) {
+    document.getElementById('status').textContent =
+      error.message;
+  }
+}
+
+setInterval(refresh, 2500);
+refresh();
+</script>
+</body>
+</html>
+)HTML";
+
+
+
+
+void handleControl() {
+  String action = server.arg("action");
+
+  if (action == "toggle") {
+    playing = !playing;
+  }
+
+  else if (action == "auto") {
+    automaticMode = true;
+    applyMood(true);
+  }
+
+  else if (action == "manual") {
+    automaticMode = false;
+  }
+
+  else if (action == "next" ||
+           action == "previous") {
+
+    automaticMode = false;
+
+    int nextTrack = currentTrack +
+      (action == "next" ? 1 : -1);
+
+    if (nextTrack > 3) nextTrack = 1;
+    if (nextTrack < 1) nextTrack = 3;
+
+    playTrack(nextTrack);
+  }
+
+  else if (action == "volume") {
+    if (!server.hasArg("value")) {
+      server.send(400, "text/plain",
+                  "Missing value");
+      return;
+    }
+
+    volumeLevel = constrain(
+      server.arg("value").toInt(), 0, 30
+    );
+  }
+
+  else {
+    server.send(400, "text/plain",
+                "Unknown action");
+    return;
+  }
+
+  server.send(200, "application/json",
+              jsonState());
+}
+
+
+
+void printWeather() {
+  Serial.println();
+  Serial.println("========== tkgod11 ==========");
+
+  Serial.print("Temperature: ");
+  Serial.print(temperature);
+  Serial.println(" C");
+
+  Serial.print("Humidity: ");
+  Serial.print(humidity);
+  Serial.println(" %");
+
+  Serial.print("Mood: ");
+  Serial.println(mood);
+
+  Serial.print("Track: ");
+  Serial.println(currentTrack);
+
+  Serial.print("Playing: ");
+  Serial.println(playing ? "YES" : "NO");
+
+  Serial.print("Mode: ");
+  Serial.println(
+    automaticMode ? "AUTO" : "MANUAL"
+  );
+
+  Serial.println("=============================");
+}
+
+
+
+
+void handleSerial() {
+  if (!Serial.available()) return;
+
+  String command = Serial.readStringUntil('\n');
+  command.trim();
+  command.toLowerCase();
+
+  if (command == "rain") {
+    temperature = 24;
+    humidity = 85;
+    applyMood(true);
+  }
+
+  else if (command == "hot") {
+    temperature = 35;
+    humidity = 40;
+    applyMood(true);
+  }
+
+  else if (command == "calm") {
+    temperature = 22;
+    humidity = 55;
+    applyMood(true);
+  }
+
+  else if (command == "auto") {
+    automaticMode = true;
+    applyMood(true);
+  }
+
+  else if (command == "manual") {
+    automaticMode = false;
+  }
+
+  else if (command == "play") {
+    playing = true;
+  }
+
+  else if (command == "pause") {
+    playing = false;
+  }
+
+  else if (command == "next") {
+    automaticMode = false;
+    playTrack(currentTrack % 3 + 1);
+  }
+
+  else if (command == "previous") {
+    automaticMode = false;
+    playTrack((currentTrack + 1) % 3 + 1);
+  }
+
+  else if (command != "status") {
+    Serial.println("Unknown command");
+  }
+
+  printWeather();
+}
+
+
+void setup() {
+  Serial.begin(115200);
+  Serial.setTimeout(100);
+
+  delay(500);
+
+  Serial.println();
+  Serial.println("tkgod11 Starting...");
+  Serial.println("Wokwi Simulation Mode");
+
+#if ENABLE_WIFI_AP
+
+  WiFi.mode(WIFI_AP);
+
+  if (WiFi.softAP(AP_SSID, AP_PASSWORD)) {
+    Serial.print("Dashboard: http://");
+    Serial.println(WiFi.softAPIP());
+  } else {
+    Serial.println("WiFi AP failed");
+  }
+
+  server.on("/", HTTP_GET, []() {
+    server.send_P(200, "text/html", PAGE);
+  });
+
+  server.on("/api/state", HTTP_GET, []() {
+    server.send(200, "application/json",
+                jsonState());
+  });
+
+  server.on("/api/control", HTTP_POST,
+            handleControl);
+
+  server.begin();
+
+#endif
+
+  mood = determineMood();
+  currentTrack = trackForMood(mood);
+
+  Serial.println();
+  Serial.println("Available commands:");
+  Serial.println("rain, hot, calm");
+  Serial.println("auto, manual");
+  Serial.println("play, pause");
+  Serial.println("next, previous, status");
+
+  printWeather();
+}
+
+
+
+
+void loop() {
+#if ENABLE_WIFI_AP
+  server.handleClient();
+#endif
+
+  handleSerial();
+
+  if (millis() - lastPrint >= 5000) {
+    lastPrint = millis();
+    printWeather();
+  }
+
+  delay(10);
+}
